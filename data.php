@@ -10,6 +10,7 @@
   <head>
     <title>Research Data</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/ol.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
@@ -17,6 +18,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <script type="text/javascript" src="js/ol.js"></script>
     <script type="text/javascript" src="js/data.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
@@ -42,8 +44,7 @@
 
             <div class="queryed-buttons">
 
-              <a href="" id="preview_link"><button class="btn queryed-button" id="preview"> Preview </button></a>
-              <button class="btn " id="download"> Download </button>
+              <a href="" id="preview_link"><button class="btn queryed-button" id="preview"> View Data </button></a>
 
             </div>
 
@@ -95,12 +96,37 @@
 
             </div>
 
+            <div id="location">
+
+              <button id="select-location" class="btn">Select location</button>
+
+              <input type="hidden" name="radius" id="radius">
+
+              <input type="hidden" name="lat" id="lat">
+
+              <input type="hidden" name="lon" id="lon">
+
+            </div>
+
             <button class="btn" id="submit-btn">Filter</button>
 
         </div>
 
       </div>
 
+    </div>
+    <div class="overlay">
+        <div class="map-container">
+          <h2>Select a location</h2>
+          <div id="location-picker">
+          </div>
+          <input type="range" min="1" max="200" value="1" id="location-picker-radius" name="location-picker-range">
+          <label for="location-picker-range" id="location-picker-label">Radius: 1km</label>
+          <div>
+            <button class="btn btn-primary" id="finish-overlay">Done</button>
+            <button class="btn btn-danger" id="cancel-overlay">Disregard</button>
+          </div>
+        </div>
     </div>
     <?php
       include("includes/footer.php");

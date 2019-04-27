@@ -1,6 +1,8 @@
 //Some variables
 var species = ["common_pipistrelle", "nathusius_pipistrelle", "soprano_pipistrelle", "myotis", "leislers_bat", "brown_long_eared", "lesser_Horseshoe", "unknown", "not_identified"];
 
+var map, layer;
+
 function toTitleCase(str) {
     return str.replace(
         /\w\S*/g,
@@ -8,6 +10,20 @@ function toTitleCase(str) {
             return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
         }
     );
+}
+
+function getCircleFeature(coordinate, radius) {
+    var view = map.getView();
+    var projection = view.getProjection();
+    var resolutionAtEquator = view.getResolution();
+    var pointResolution = layer.getSource().getProjection().getPointResolutionFunc_(resolutionAtEquator, coordinate);
+    var resolutionFactor = resolutionAtEquator/pointResolution;
+    var radius = (radius * 1000 / ol.proj.Units.METERS_PER_UNIT.m) * resolutionFactor;
+
+    var circle = new ol.geom.Circle(coordinate, radius);
+    var circleFeature = new ol.Feature(circle);
+
+    return circleFeature
 }
 
 //Helpful functions
@@ -58,6 +74,13 @@ $(document).ready(function(){
     });
 
     formData['range'] = $("#date_range").val();
+    
+    if($("#lon").val() != "" || $("#lat").val() != "" || $("#radius").val() != ""){
+      formData['lon'] = $("#lon").val();
+      formData['lat'] = $("#lat").val();
+      formData['radius'] = $("#radius").val();
+    }
+
 
     $.get(apiURL + "calls", formData, function(response){
       var params = Object.keys(formData).map(key => key + '=' + formData[key]).join('&');
@@ -89,6 +112,66 @@ $(document).ready(function(){
       <td id="${value}-count"></td>
     `)
 
+  })
+
+  $("#select-location").click(function(){
+    $(".overlay").toggle();
+  })
+
+  //Setup the Map
+
+  var vectorSource = new ol.source.Vector({
+      projection: 'EPSG:4326'
+  });
+
+  layer = new ol.layer.Tile({
+      source: new ol.source.OSM()
+  });
+
+  var circleLayer = new ol.layer.Vector({
+      source: vectorSource
+  });
+
+  map = new ol.Map({
+    layers: [layer, circleLayer],
+    target: document.getElementById('location-picker'),
+    view: new ol.View({
+      center: ol.proj.fromLonLat([-6.2539820, 53.3405900]),
+      zoom:7,
+      extent: [-13037508.342789244, -9037508.342789244, 13037508.342789244, 9037508.342789244],
+      minZoom: 3
+    })
+  })
+
+  map.getViewport().addEventListener("dblclick", function(e) {
+    var coordinate = map.getEventCoordinate(e);
+    radius = $("#location-picker-radius").val();
+    feature = getCircleFeature(coordinate, radius)
+    vectorSource.clear();
+    vectorSource.addFeature(feature);
+    //Add the selected center and radius to the form
+    var lonlat = ol.proj.transform(coordinate, 'EPSG:3857', 'EPSG:4326');
+    $("#lon").val(lonlat[0]);
+    $("#lat").val(lonlat[1]);
+    $("#radius").val(radius);
+  });
+
+  $(".overlay").hide();
+
+  $("#location-picker-radius").on('input', function(e){
+    $("#location-picker-label").text("Radius: " + $(this).val() + "km");
+  })
+
+  $("#finish-overlay").click(function(){
+    $(".overlay").hide();
+  })
+
+  $("#cancel-overlay").click(function(){
+    $(".overlay").hide();
+    $("#lon").removeAttr('value');
+    $("#lat").removeAttr('value');
+    $("#radius").removeAttr('value');
+    vectorSource.clear();
   })
 
 });
